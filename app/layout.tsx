@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import type { Metadata } from "next";
 import { Quantico } from "next/font/google";
 import Image from "next/image";
+import { LoadingProvider } from "@/components/Loading";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
@@ -43,32 +44,34 @@ export default async function RootLayout({
       <body
         className={`${quantico.className} flex min-h-full flex-col antialiased`}
       >
-        <main className="flex flex-1 px-4 py-8 md:px-8">{children}</main>
-        <footer className="mt-auto w-full flex-shrink-0 py-6 text-center text-sm text-gray-400">
-          <a
-            href="https://f9ine.com"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-center gap-2 transition-colors duration-200 hover:text-gray-300"
-          >
-            <Image
-              alt="F9ine.com"
-              src="/f9ine.svg"
-              loading="lazy"
-              decoding="async"
-              width={32}
-              height={32}
-              className="rounded-md"
-            />
-            © 2025 Layoffield. All rights reserved.
-          </a>
-        </footer>
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            className: "!bg-gray-800 !text-white",
-          }}
-        />
+        <LoadingProvider>
+          <main className="flex flex-1 px-4 py-8 md:px-8">{children}</main>
+          <footer className="mt-auto w-full flex-shrink-0 py-6 text-center text-sm text-gray-400">
+            <a
+              href="https://f9ine.com"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 transition-colors duration-200 hover:text-gray-300"
+            >
+              <Image
+                alt="F9ine.com"
+                src="/f9ine.svg"
+                loading="lazy"
+                decoding="async"
+                width={32}
+                height={32}
+                className="rounded-md"
+              />
+              © 2025 Layoffield. All rights reserved.
+            </a>
+          </footer>
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              className: "!bg-gray-800 !text-white",
+            }}
+          />
+        </LoadingProvider>
       </body>
     </html>
   );

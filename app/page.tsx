@@ -4,7 +4,7 @@ import Image from "next/image";
 import PageBackground from "@/components/PageBackground";
 import SignInButton from "@/components/SignInButton";
 
-export default function Home() {
+export default function HomePage() {
   const router = useRouter();
 
   return (

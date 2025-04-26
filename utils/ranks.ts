@@ -19,17 +19,19 @@ const LAYOFF_POINTS = 0.5;
 const SURVIVED_POINTS = 2;
 
 export function getRank(battles?: Battle[]) {
-  if (!battles) return;
+  if (!battles) {
+    return { rank: ranks[0], score: 0 };
+  }
 
   const laidoffBattles = battles.filter((battle) => !battle.status);
   const survivedBattles = battles.filter((battle) => battle.status);
 
-  const laidoffPoints = laidoffBattles.length * LAYOFF_POINTS;
-  const survivedPoints = survivedBattles.length * SURVIVED_POINTS;
+  const laidoffScore = laidoffBattles.length * LAYOFF_POINTS;
+  const survivedPScore = survivedBattles.length * SURVIVED_POINTS;
 
-  const warPoints = Math.round(laidoffPoints + survivedPoints);
-  const rankPoints = Math.min(MAX_POINTS, warPoints);
-  const rank = ranks[rankPoints];
+  const score = Math.round(laidoffScore + survivedPScore);
+  const rankScore = Math.min(MAX_POINTS, score);
+  const rank = ranks[rankScore];
 
-  return rank;
+  return { rank, score };
 }

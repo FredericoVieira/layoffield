@@ -4,7 +4,7 @@
 
 Discover the fearless developers rising heroically against the battle of the layoff war.
 
-Available in: ???
+Available in: [Layoffield](https://layoffield.vercel.app)
 
 ## Getting Started
 
@@ -41,9 +41,5 @@ And then:
 ```
 npm run start
 ```
-
-### TODO:
-
-- [ ] Add loading when signing in
 
 Made with ♥️ by Frederico Vieira

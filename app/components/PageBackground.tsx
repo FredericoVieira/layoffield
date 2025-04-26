@@ -1,5 +1,6 @@
-import Image from "next/image";
 import { ReactNode } from "react";
+import Image from "next/image";
+import { cn } from "@/utils/cn";
 
 type PageBackgroundProps = {
   children: ReactNode;
@@ -16,7 +17,10 @@ export default function PageBackground({
 }: PageBackgroundProps) {
   return (
     <div
-      className={`flex w-full flex-col ${centralize ? "items-center justify-center" : ""}`}
+      className={cn(
+        "flex w-full flex-col",
+        centralize && "items-center justify-center",
+      )}
     >
       <div className="fixed inset-0 -z-10 w-full">
         <Image

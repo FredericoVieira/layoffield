@@ -1,15 +1,20 @@
 import { Battle } from "@/db/types";
 
-export const validBattleFields = ({ companyName, date }: Battle) =>
-  companyName.trim() !== "" && date !== "";
-
-export const getValidBattles = (battles?: Battle[]) =>
-  battles?.filter(validBattleFields) ?? [];
-
-export const hasDuplicateBattles = (battles: Battle[]) => {
-  const normalizedCompanyNames = battles.map((battle) =>
-    battle.companyName.trim().toLowerCase(),
+export const hasInvalidBattles = (battles: Battle[]) =>
+  battles.some(
+    ({ companyName, date }: Battle) => companyName.trim() === "" || date === "",
   );
 
-  return new Set(normalizedCompanyNames).size !== normalizedCompanyNames.length;
+export const hasDuplicateBattles = (battles: Battle[]) => {
+  const keys = battles.map(
+    ({ companyName, date }) => `${companyName.trim().toLowerCase()}|${date}`,
+  );
+  return new Set(keys).size !== keys.length;
+};
+
+export const getSurvivorRatio = (battles: Battle[]) => {
+  const laidoffBattles = battles.filter((battle) => !battle.status);
+  const survivedBattles = battles.filter((battle) => battle.status);
+
+  return `${survivedBattles.length}/${laidoffBattles.length}`;
 };

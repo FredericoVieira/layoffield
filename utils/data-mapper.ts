@@ -1,4 +1,13 @@
-import { Battle, BattleDatabase, Soldier, SoldierDatabase } from "@/db/types";
+import {
+  Battle,
+  BattleDatabase,
+  Ranking,
+  RankingDatabase,
+  Soldier,
+  SoldierDatabase,
+} from "@/db/types";
+import { getRank } from "./ranks";
+import { getSurvivorRatio } from "./battles";
 
 export function mapBattles(battles: BattleDatabase[]): Battle[] {
   return battles.map(({ id, soldier_id, company_name, status, date }) => ({
@@ -6,7 +15,7 @@ export function mapBattles(battles: BattleDatabase[]): Battle[] {
     soldierId: soldier_id,
     companyName: company_name,
     status,
-    date: date.split('T')[0],
+    date: date.split("T")[0],
   }));
 }
 
@@ -20,10 +29,30 @@ export function mapBattlesToDatabase(battlesView: Battle[]): BattleDatabase[] {
   }));
 }
 
-export function mapSoldier({ id, avatar_url, username }: SoldierDatabase): Soldier {
+export function mapSoldier({
+  id,
+  avatar_url,
+  username,
+}: SoldierDatabase): Soldier {
   return {
     id,
     avatarUrl: avatar_url,
     username,
-  }
+  };
+}
+
+export function mapRanking(ranking: RankingDatabase[]): Ranking[] {
+  return ranking.map(({ battles, ...soldier }) => {
+    const mappedBattles = mapBattles(battles);
+    const { rank, score } = getRank(mappedBattles) ?? {};
+    const ratio = getSurvivorRatio(mappedBattles);
+
+    return {
+      ...mapSoldier(soldier),
+      battles: mapBattles(battles),
+      ratio,
+      rank,
+      score,
+    };
+  });
 }

@@ -1,21 +1,21 @@
 "use client";
 
-import { useMemo, useRef, useCallback } from "react";
+import { useMemo, useRef, useCallback, useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { X, Bomb, Plus, CircleCheck, CircleX } from "lucide-react";
+import isEqual from "lodash.isequal";
+import { X, Bomb, Plus } from "lucide-react";
 import Image from "next/image";
-import { upsertBattles, deleteBattle } from "@/db/client";
+import { syncBattles } from "@/db/client";
 import { Battle } from "@/db/types";
 import { cn } from "@/utils/cn";
-import { hasDuplicateBattles, validBattleFields } from "@/utils/battles";
-import Tooltip from "@/components/Tooltip";
+import { hasDuplicateBattles, hasInvalidBattles } from "@/utils/battles";
 
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   soldierId: string;
-  battles?: Battle[];
-  setBattles: (battles?: Battle[]) => void;
+  initialBattles?: Battle[];
+  setInitialBattles: (battles?: Battle[]) => void;
 };
 
 const NoBattles = () => (
@@ -34,10 +34,15 @@ export default function BattlesModal({
   isOpen,
   onClose,
   soldierId,
-  battles,
-  setBattles,
+  initialBattles = [],
+  setInitialBattles,
 }: ModalProps) {
   const battlesContainerRef = useRef<HTMLDivElement>(null);
+  const [battles, setBattles] = useState<Battle[]>([]);
+
+  useEffect(() => {
+    setBattles(initialBattles);
+  }, [initialBattles]);
 
   const createBattle = useCallback(
     () => ({
@@ -51,7 +56,7 @@ export default function BattlesModal({
   );
 
   const addBattle = () => {
-    setBattles([...(battles ?? []), createBattle()]);
+    setBattles([...battles, createBattle()]);
     setTimeout(() => {
       battlesContainerRef.current?.scrollTo({
         top: battlesContainerRef.current.scrollHeight,
@@ -72,43 +77,30 @@ export default function BattlesModal({
   };
 
   const handleDeleteBattle = async (battleId: string) => {
-    try {
-      const battleDeleted = await deleteBattle(battleId);
-      if (battleDeleted) {
-        const newBattles = battles?.filter((battle) => battle.id !== battleId);
-        setBattles(newBattles);
-        toast.success("Battle deleted");
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to delete battle");
-    }
+    const newBattles = battles?.filter((battle) => battle.id !== battleId);
+    setBattles(newBattles);
   };
 
   const isValid = useMemo(() => {
-    if (!battles || battles.length === 0) return false;
-
-    const hasRequiredFields = battles.every(validBattleFields);
+    const hasInvalid = hasInvalidBattles(battles);
     const hasDuplicates = hasDuplicateBattles(battles);
 
-    return hasRequiredFields && !hasDuplicates;
+    return !hasInvalid && !hasDuplicates;
   }, [battles]);
 
-  const handleClose = () => {
-    const validBattles = battles?.filter(
-      (battle) => battle.companyName.trim() !== "" && battle.date !== "",
-    );
+  const hasChanges = useMemo(() => {
+    return !isEqual(battles, initialBattles);
+  }, [battles, initialBattles]);
 
-    setBattles(validBattles);
+  const handleClose = () => {
+    setBattles(initialBattles);
     onClose();
   };
 
   const handleSave = async () => {
-    if (!isValid) return;
-
     try {
-      const updatedBattles = await upsertBattles(soldierId, battles ?? []);
-      setBattles(updatedBattles);
+      const updatedBattles = await syncBattles(initialBattles, battles);
+      setInitialBattles(updatedBattles);
       handleClose();
       toast.success("Battles saved successfully");
     } catch (error) {
@@ -120,6 +112,8 @@ export default function BattlesModal({
   if (!isOpen || !battles) {
     return null;
   }
+
+  const disabled = !isValid || !hasChanges;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 p-4">
@@ -142,7 +136,7 @@ export default function BattlesModal({
               battles.map(({ id, companyName, status, date }) => (
                 <div
                   key={id}
-                  className="grid grid-cols-1 gap-4 rounded-lg bg-black/30 p-4 md:grid-cols-2"
+                  className="grid grid-cols-1 gap-4 rounded-lg bg-black/30 p-4 md:grid-cols-[1fr_1fr_auto]"
                 >
                   <input
                     type="text"
@@ -153,34 +147,39 @@ export default function BattlesModal({
                     }
                     className="w-full rounded-md bg-gray-800 p-2 text-white"
                   />
-                  <div className="grid grid-cols-[150px_35px_35px] items-center justify-center gap-2 md:grid-cols-[1fr_50px_50px] md:gap-4">
-                    <input
-                      type="date"
-                      value={date}
-                      onChange={(e) =>
-                        handleUpdateBattle(id, "date", e.target.value)
-                      }
-                      className="w-full rounded-md bg-gray-800 p-2 text-white [color-scheme:dark]"
-                    />
-                    <Tooltip
-                      label={status ? "Survived" : "Laid off"}
-                      className="h-full"
-                    >
-                      <button
-                        onClick={() =>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) =>
+                      handleUpdateBattle(id, "date", e.target.value)
+                    }
+                    className="w-full rounded-md bg-gray-800 p-2 text-white [color-scheme:dark]"
+                  />
+                  <div className="flex items-center justify-between gap-2 md:justify-center md:gap-4">
+                    <label className="flex h-full cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={status}
+                        onChange={() =>
                           handleUpdateBattle(id, "status", !status)
                         }
-                        className={`h-full rounded-md p-2 hover:cursor-pointer md:px-4 ${
-                          status ? "bg-orange-500" : "bg-gray-800"
-                        }`}
-                      >
-                        {status ? (
-                          <CircleCheck className="h-5 w-5" />
-                        ) : (
-                          <CircleX className="h-5 w-5" />
+                        className="peer sr-only"
+                      />
+                      <div
+                        className={cn(
+                          "peer h-6 w-10 rounded-full bg-gray-800 transition-colors duration-200 peer-checked:bg-orange-500",
+                          "relative",
                         )}
-                      </button>
-                    </Tooltip>
+                      >
+                        <span
+                          className={cn(
+                            "absolute top-1 left-1 h-4 w-4 rounded-full bg-white transition-transform duration-200",
+                            status && "translate-x-4",
+                          )}
+                        />
+                      </div>
+                      <span className="">Survivor</span>
+                    </label>
                     <button
                       onClick={() => handleDeleteBattle(id)}
                       className="h-full rounded-md p-2 hover:cursor-pointer hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-gray-500 md:px-4"
@@ -211,12 +210,12 @@ export default function BattlesModal({
               </button>
               <button
                 onClick={handleSave}
-                disabled={!isValid}
+                disabled={disabled}
                 className={cn(
                   "rounded-md px-4 py-2 text-white hover:cursor-pointer",
-                  isValid
-                    ? "bg-orange-500 hover:bg-orange-600"
-                    : "cursor-not-allowed bg-gray-700/70 text-gray-500",
+                  disabled
+                    ? "cursor-not-allowed bg-gray-700/70 text-gray-500"
+                    : "bg-orange-500 hover:bg-orange-600",
                 )}
               >
                 Save

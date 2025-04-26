@@ -7,7 +7,6 @@ import Image from "next/image";
 import { Battle, Soldier } from "@/db/types";
 import { getRank } from "@/utils/ranks";
 import { getMedals } from "@/utils/medals";
-import { getValidBattles } from "@/utils/battles";
 import MedalsModal from "@/components/MedalsModal/MedalsModal";
 import BattlesModal from "@/components/BattlesModal";
 import Tooltip from "@/components/Tooltip";
@@ -26,9 +25,8 @@ export default function Header({ soldier, battles, setBattles }: HeaderProps) {
 
   const { id, avatarUrl, username } = soldier ?? {};
 
-  const validBattles = getValidBattles(battles);
-  const rank = getRank(validBattles);
-  const medals = getMedals(validBattles);
+  const { rank } = getRank(battles) ?? {};
+  const medals = getMedals(battles);
 
   const Button = ({
     icon,
@@ -70,13 +68,14 @@ export default function Header({ soldier, battles, setBattles }: HeaderProps) {
           {rank && (
             <div className="flex items-center gap-2">
               <Image
-                src={rank?.image ?? ""}
-                alt={rank?.name ?? ""}
+                src={rank.image}
+                alt={rank.name}
+                quality={100}
                 width={40}
                 height={40}
               />
               <span className="hidden text-lg font-bold text-gray-200 sm:block">
-                {rank?.name ?? ""}
+                {rank.name}
               </span>
             </div>
           )}
@@ -114,8 +113,8 @@ export default function Header({ soldier, battles, setBattles }: HeaderProps) {
         isOpen={isBattlesModalOpen}
         onClose={() => setBattlesModalOpen(false)}
         soldierId={id}
-        battles={battles}
-        setBattles={setBattles}
+        initialBattles={battles}
+        setInitialBattles={setBattles}
       />
     </>
   );

@@ -1,10 +1,14 @@
 import { toast } from "react-hot-toast";
 import { Github } from "lucide-react";
 import { signIn } from "@/db/server";
+import { useLoading } from "@/components/Loading";
 
 export default function SignInButton() {
+  const { showLoading } = useLoading();
+
   const handleSignIn = async () => {
     try {
+      showLoading(true);
       await signIn();
     } catch (error) {
       console.error(error);

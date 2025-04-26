@@ -25,3 +25,14 @@ export type SoldierDatabase = {
   avatar_url: string;
   username: string;
 };
+
+export type RankingDatabase = SoldierDatabase & {
+  battles: BattleDatabase[];
+};
+
+export type Ranking = Soldier & {
+  battles: Battle[];
+  ratio: string;
+  rank: { name: string; image: string };
+  score: number;
+};

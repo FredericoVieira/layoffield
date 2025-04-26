@@ -6,7 +6,7 @@ import PageBackground from "@/components/PageBackground";
 import SignInButton from "@/components/SignInButton";
 import { ranks } from "@/utils/ranks";
 
-export default function About() {
+export default function AboutPage() {
   return (
     <PageBackground image="/about.png" alt="About background">
       <div className="mx-auto mt-12 mb-12 w-full max-w-4xl px-4 sm:mt-16 sm:mb-12 sm:px-6 md:mt-28 md:mb-28">
