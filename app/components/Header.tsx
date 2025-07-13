@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HelpCircle, Trophy, Swords } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -24,6 +24,12 @@ export default function Header({ soldier, battles, setBattles }: HeaderProps) {
   const [isBattlesModalOpen, setBattlesModalOpen] = useState(false);
 
   const { id, avatarUrl, username } = soldier ?? {};
+
+  useEffect(() => {
+    if (battles?.length === 0) {
+      setBattlesModalOpen(true);
+    }
+  }, [battles]);
 
   const { rank } = getRank(battles) ?? {};
   const medals = getMedals(battles);
